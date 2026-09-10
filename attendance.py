@@ -3,16 +3,16 @@ from datetime import datetime
 import os
 from deepface import DeepFace
 
-print("Analyzing the photo...")
+print("Processing")
 
-results = DeepFace.find(
-    img_path="class_photo.jpg", 
+result = DeepFace.find(
+    img_path="class_photo.jpeg", 
     db_path="students_database", 
     enforce_detection=False,
     detector_backend="retinaface"
 )
 
-marked_students = set()
+students_present = set()
 
 with open('attendance.csv', 'w', newline='') as f:
     writer = csv.writer(f)
@@ -20,18 +20,16 @@ with open('attendance.csv', 'w', newline='') as f:
     attendance_time = datetime.now().strftime("%H:%M:%S")
     attendance_date = datetime.now().strftime("%Y-%m-%d")
 
-    for face_match_data in results:
-        if not face_match_data.empty:
+    for face_match in result:
+        if not face_match.empty:
             
-            matched_file_path = face_match_data.iloc[0]['identity']
+            matched_file_path = face_match.iloc[0]['identity']
             student_name = os.path.basename(matched_file_path).split('.')[0]
             
-            if student_name not in marked_students:
-                marked_students.add(student_name)
+            if student_name not in students_present:
+                students_present.add(student_name)
                 writer.writerow([student_name, attendance_date, attendance_time])
-                print(f"Marked Present: {student_name}")
-            else:
-                print(f"Duplicate entry : {student_name}, skipping.")
+                print(f"Present: {student_name}")
 
-print(f"\nTotal unique students : {len(marked_students)}")
+print(f"\nTotal students Present : {len(students_present)}")
 print("\nAttendance stored in attendance.csv")
